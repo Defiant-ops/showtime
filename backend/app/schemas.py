@@ -68,3 +68,23 @@ class PaymentOut(BaseModel):
     payment_method: str
     payment_status: str
     transaction_ref: str
+
+
+class TicketOut(BaseModel):
+    ticket_id: int
+    booking_id: int
+    ticket_type_id: int
+    ticket_type: str
+    event_title: str
+    owner_name: str
+    status: str
+    price: Decimal
+    seat: str | None
+    issued_at: datetime
+
+
+class TicketTypeOut(BaseModel):
+    ticket_type_id: int
+    type_name: str
+    lounge_access: str
+    complimentary_food: str

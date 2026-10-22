@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import auth, bookings, events, payments
+from .routers import auth, bookings, events, payments, tickets
 
 app = FastAPI(
     title="Showtime API",
@@ -21,6 +21,7 @@ app.include_router(auth.router)
 app.include_router(events.router)
 app.include_router(bookings.router)
 app.include_router(payments.router)
+app.include_router(tickets.router)
 
 
 @app.get("/")

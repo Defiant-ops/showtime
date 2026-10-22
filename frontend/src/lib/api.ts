@@ -39,6 +39,26 @@ export type Payment = {
   transaction_ref: string;
 };
 
+export type IssuedTicket = {
+  ticket_id: number;
+  booking_id: number;
+  ticket_type_id: number;
+  ticket_type: string;
+  event_title: string;
+  owner_name: string;
+  status: string;
+  price: string;
+  seat: string | null;
+  issued_at: string;
+};
+
+export type TicketType = {
+  ticket_type_id: number;
+  type_name: string;
+  lounge_access: string;
+  complimentary_food: string;
+};
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -121,4 +141,14 @@ export const api = {
 
   demoPayment: (bookingId: number) =>
     request<Payment>(`/api/payments/demo/${bookingId}`, { method: "POST" }),
+
+  tickets: (userId: number) =>
+    request<IssuedTicket[]>(`/api/tickets/user/${userId}`),
+
+  adminTickets: (userId: number) =>
+    request<IssuedTicket[]>("/api/tickets/admin", {
+      headers: { "X-User-ID": String(userId) },
+    }),
+
+  ticketTypes: () => request<TicketType[]>("/api/ticket-types"),
 };

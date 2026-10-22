@@ -47,6 +47,9 @@ class Booking(Base):
     user: Mapped["User"] = relationship(back_populates="bookings")
     event: Mapped["Event"] = relationship(back_populates="bookings")
     payment: Mapped["Payment | None"] = relationship(back_populates="booking", uselist=False)
+    ticket: Mapped["Ticket | None"] = relationship(
+        back_populates="booking", uselist=False, cascade="all, delete-orphan"
+    )
 
 
 class Payment(Base):
@@ -60,3 +63,29 @@ class Payment(Base):
     transaction_ref: Mapped[str] = mapped_column(String(100))
 
     booking: Mapped["Booking"] = relationship(back_populates="payment")
+
+
+class TicketType(Base):
+    __tablename__ = "ticket_type"
+
+    ticket_type_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    type_name: Mapped[str] = mapped_column(String(40), unique=True)
+    lounge_access: Mapped[str] = mapped_column(String(1), default="N")
+    complimentary_food: Mapped[str] = mapped_column(String(1), default="N")
+
+    tickets: Mapped[list["Ticket"]] = relationship(back_populates="ticket_type")
+
+
+class Ticket(Base):
+    __tablename__ = "ticket"
+
+    ticket_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    booking_id: Mapped[int] = mapped_column(ForeignKey("bookings.booking_id"), unique=True)
+    ticket_type_id: Mapped[int] = mapped_column(ForeignKey("ticket_type.ticket_type_id"))
+    status: Mapped[str] = mapped_column(String(20), default="ACTIVE")
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+    seat: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+
+    booking: Mapped["Booking"] = relationship(back_populates="ticket")
+    ticket_type: Mapped["TicketType"] = relationship(back_populates="tickets")

@@ -169,6 +169,29 @@ p {
 .metric b { font-size: 26px; font-weight: 500; }
 .metric span { color: #686660; font-size: 9px; letter-spacing: .13em; }
 
+.ticket-section + .ticket-section { margin-top: 34px; }
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 0;
+}
+
+.ticket-row { grid-template-columns: .8fr 1.7fr 1fr .8fr .7fr .8fr; }
+.ticket-type-row { grid-template-columns: 1.2fr 1fr 1.4fr; }
+
+.ticket-event { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ticket-event strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.ticket-event small { color: #77746e; font-size: 10px; }
+
 .toolbar {
   display: flex;
   gap: 8px;
@@ -582,6 +605,12 @@ select {
   .user-name { display: none; }
   .content { padding: 36px 15px 70px; }
   .table-row { grid-template-columns: 1.8fr .9fr 1fr; }
+  .ticket-row { grid-template-columns: 1fr 1.3fr .8fr; }
+  .ticket-row > :nth-child(2) { display: flex; }
+  .ticket-row > :nth-child(3), .ticket-row > :nth-child(4), .ticket-row > :nth-child(5) { display: none; }
+  .ticket-type-row { grid-template-columns: 1fr 1fr; }
+  .ticket-type-row > :nth-child(2) { display: block; }
+  .ticket-type-row > :nth-child(3) { display: none; }
   .table-row > :nth-child(2), .table-row > :nth-child(4), .table-row > :nth-child(5) { display: none; }
   .table-header > :nth-child(1)::after { content: " / DETAILS"; }
   .page-head { align-items: start; }
@@ -595,5 +624,8 @@ select {
   .table-row > :nth-child(3) { display: none; }
   .table-header > :nth-child(1)::after { content: ""; }
   .event-title-cell strong { white-space: normal; }
+  .ticket-row { grid-template-columns: 1fr 24px; }
+  .ticket-row > :nth-child(2), .ticket-row > :nth-child(3), .ticket-row > :nth-child(4), .ticket-row > :nth-child(5), .ticket-row > :nth-child(6) { display: none; }
+  .ticket-type-row { grid-template-columns: 1fr 1fr; }
   .form-pair { grid-template-columns: 1fr; }
 }

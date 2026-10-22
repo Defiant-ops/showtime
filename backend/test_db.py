@@ -1,13 +1,22 @@
-from app.database import engine
+import sys
+
 from sqlalchemy import text
 
-try:
-    with engine.connect() as connection:
-        result = connection.execute(text("SELECT 1 FROM dual"))
-        print("Oracle connection successful:", result.scalar())
-except Exception as exc:
-    print("Oracle connection failed.")
-    print(exc)
-conn = oracledb.connect(user='system', password='password', dsn='127.0.0.1:1521/xepdb1')
-cur = conn.cursor()
+from app.database import engine
+
+
+def main() -> int:
+    try:
+        with engine.connect() as connection:
+            result = connection.execute(text("SELECT 1 FROM dual"))
+            print("Oracle connection successful:", result.scalar())
+    except Exception as exc:
+        print("Oracle connection failed.")
+        print(exc)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
 
