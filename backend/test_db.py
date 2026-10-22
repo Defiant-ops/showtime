@@ -8,3 +8,6 @@ try:
 except Exception as exc:
     print("Oracle connection failed.")
     print(exc)
+conn = oracledb.connect(user='system', password='password', dsn='127.0.0.1:1521/xepdb1')
+cur = conn.cursor()
+

@@ -37,3 +37,23 @@ CREATE TABLE payments (
     transaction_ref VARCHAR2(100) NOT NULL,
     CONSTRAINT fk_payment_booking FOREIGN KEY (booking_id) REFERENCES bookings(booking_id)
 );
+
+
+CREATE TABLE  ticket{
+    ticket_ID INTEGER(12) UNIQUE PRIMARY KEY,
+    Ticket_type VARCHAR(20),
+    status VARCHAR(20),
+    price NUMBER(10,2),
+    booking_id NUMBER NOT NULL,
+    CONSTRAINT fk_payment_booking FOREIGN KEY (booking_id) REFERENCES bookings(booking_id)
+}
+
+CREATE TABLE ticket_type{
+    ticket_ID INTEGER(12) UNIQUE PRIMARY KEY,
+    Ticket_type VARCHAR(20),
+    lounge_access VARCHAR(3),
+    comp_food varchar(3),
+    seat VARCHAR(20),
+    CONSTRAINT fk_tix_id FOREIGN KEY (ticket_ID) REFERENCES ticket(ticket_ID),
+    CONSTRAINT fk_tix_type FOREIGN KEY (Ticket_type) REFERENCES ticket(ticket_type)
+}

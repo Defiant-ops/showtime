@@ -37,6 +37,16 @@ class EventOut(BaseModel):
     status: str
 
 
+class EventCreate(BaseModel):
+    title: str
+    description: str
+    category: str
+    venue: str
+    event_date: datetime
+    capacity: int
+    price: Decimal
+
+
 class BookingCreate(BaseModel):
     user_id: int
     event_id: int

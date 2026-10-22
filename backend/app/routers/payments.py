@@ -3,8 +3,30 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import Booking, Payment
+from ..admin import require_admin
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
+
+
+@router.get("/admin")
+def all_payments(
+    db: Session = Depends(get_db),
+    _: object = Depends(require_admin),
+):
+    return db.query(Payment).order_by(Payment.payment_id.desc()).all()
+
+
+@router.delete("/{payment_id}", status_code=204)
+def delete_payment(
+    payment_id: int,
+    db: Session = Depends(get_db),
+    _: object = Depends(require_admin),
+):
+    payment = db.query(Payment).filter(Payment.payment_id == payment_id).first()
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    db.delete(payment)
+    db.commit()
 
 
 @router.get("/user/{user_id}")

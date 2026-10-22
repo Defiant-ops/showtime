@@ -235,9 +235,6 @@ select {
 .event-row {
   width: 100%;
   text-align: left;
-  border-top: 0;
-  border-left: 0;
-  border-right: 0;
   background: transparent;
   cursor: pointer;
 }
@@ -245,6 +242,16 @@ select {
 .event-row:hover {
   background: #171717;
 }
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.delete-button { color: #8b6253; }
+.delete-button:hover { color: #e65f20; }
 
 .event-title-cell {
   display: flex;
@@ -422,11 +429,57 @@ select {
   letter-spacing: .12em;
   font-weight: 800;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
 }
 
 .primary-button:hover { filter: brightness(1.1); }
 .primary-button:disabled { opacity: .5; cursor: wait; }
 .primary-button.compact { padding: 9px 12px; }
+
+.admin-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.admin-form label {
+  display: block;
+  min-width: 0;
+  color: #77746e;
+  font-size: 9px;
+  letter-spacing: .12em;
+  font-weight: 700;
+}
+
+.admin-form input, .admin-form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 7px;
+  min-height: 38px;
+  padding: 9px 10px;
+  border: 1px solid #30302f;
+  background: #0e0e0e;
+  color: #ddd9d2;
+  outline: 0;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.admin-form textarea {
+  min-height: 76px;
+  resize: vertical;
+}
+
+.admin-form input:focus, .admin-form textarea:focus { border-color: #5a4a40; }
+
+.form-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
 
 .footer {
   position: fixed;
@@ -542,4 +595,5 @@ select {
   .table-row > :nth-child(3) { display: none; }
   .table-header > :nth-child(1)::after { content: ""; }
   .event-title-cell strong { white-space: normal; }
+  .form-pair { grid-template-columns: 1fr; }
 }

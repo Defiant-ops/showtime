@@ -3,21 +3,17 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models import Booking, Event, User
+from ..admin import require_admin
 from ..schemas import BookingCreate, BookingOut
 
 router = APIRouter(prefix="/api/bookings", tags=["bookings"])
 
 
-@router.get("/user/{user_id}", response_model=list[BookingOut])
-def user_bookings(user_id: int, db: Session = Depends(get_db)):
-    rows = (
-        db.query(Booking, Event.title)
-        .join(Event, Event.event_id == Booking.event_id)
-        .filter(Booking.user_id == user_id)
-        .order_by(Booking.booking_date.desc())
-        .all()
-    )
-
+def _booking_rows(db: Session, user_id: int | None = None):
+    query = db.query(Booking, Event.title).join(Event, Event.event_id == Booking.event_id)
+    if user_id is not None:
+        query = query.filter(Booking.user_id == user_id)
+    rows = query.order_by(Booking.booking_date.desc()).all()
     return [
         {
             "booking_id": booking.booking_id,
@@ -29,6 +25,34 @@ def user_bookings(user_id: int, db: Session = Depends(get_db)):
         }
         for booking, title in rows
     ]
+
+
+@router.get("/user/{user_id}", response_model=list[BookingOut])
+def user_bookings(user_id: int, db: Session = Depends(get_db)):
+    return _booking_rows(db, user_id)
+
+
+@router.get("/admin", response_model=list[BookingOut])
+def all_bookings(
+    db: Session = Depends(get_db),
+    _: object = Depends(require_admin),
+):
+    return _booking_rows(db)
+
+
+@router.delete("/{booking_id}", status_code=204)
+def delete_booking(
+    booking_id: int,
+    db: Session = Depends(get_db),
+    _: object = Depends(require_admin),
+):
+    booking = db.query(Booking).filter(Booking.booking_id == booking_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    if booking.payment:
+        db.delete(booking.payment)
+    db.delete(booking)
+    db.commit()
 
 
 @router.post("", response_model=BookingOut)

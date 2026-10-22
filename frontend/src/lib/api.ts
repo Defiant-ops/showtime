@@ -12,6 +12,8 @@ export type Event = {
   status: string;
 };
 
+export type EventCreate = Omit<Event, "event_id" | "status">;
+
 export type User = {
   user_id: number;
   name: string;
@@ -39,11 +41,14 @@ export type Payment = {
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options?.headers as Record<string, string> | undefined),
+    },
   });
 
-  const data = await response.json();
+  const data = response.status === 204 ? undefined : await response.json();
 
   if (!response.ok) {
     throw new Error(data.detail || "Request failed");
@@ -67,8 +72,32 @@ export const api = {
 
   events: () => request<Event[]>("/api/events"),
 
+  createEvent: (userId: number, event: EventCreate) =>
+    request<Event>("/api/events", {
+      method: "POST",
+      headers: { "X-User-ID": String(userId) },
+      body: JSON.stringify(event),
+    }),
+
+  deleteEvent: (userId: number, eventId: number) =>
+    request<void>(`/api/events/${eventId}`, {
+      method: "DELETE",
+      headers: { "X-User-ID": String(userId) },
+    }),
+
   bookings: (userId: number) =>
     request<Booking[]>(`/api/bookings/user/${userId}`),
+
+  adminBookings: (userId: number) =>
+    request<Booking[]>("/api/bookings/admin", {
+      headers: { "X-User-ID": String(userId) },
+    }),
+
+  deleteBooking: (userId: number, bookingId: number) =>
+    request<void>(`/api/bookings/${bookingId}`, {
+      method: "DELETE",
+      headers: { "X-User-ID": String(userId) },
+    }),
 
   book: (userId: number, eventId: number) =>
     request<Booking>("/api/bookings", {
@@ -78,6 +107,17 @@ export const api = {
 
   payments: (userId: number) =>
     request<Payment[]>(`/api/payments/user/${userId}`),
+
+  adminPayments: (userId: number) =>
+    request<Payment[]>("/api/payments/admin", {
+      headers: { "X-User-ID": String(userId) },
+    }),
+
+  deletePayment: (userId: number, paymentId: number) =>
+    request<void>(`/api/payments/${paymentId}`, {
+      method: "DELETE",
+      headers: { "X-User-ID": String(userId) },
+    }),
 
   demoPayment: (bookingId: number) =>
     request<Payment>(`/api/payments/demo/${bookingId}`, { method: "POST" }),

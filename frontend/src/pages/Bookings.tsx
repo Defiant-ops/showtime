@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowUpRight, CreditCard, Ticket, X, CheckCircle2 } from "lucide-react";
+import { ArrowUpRight, CreditCard, Ticket, X, CheckCircle2, Trash2 } from "lucide-react";
 import { api, type Booking, type Payment, type User } from "../lib/api";
 
 export default function Bookings({ user }: { user: User }) {
@@ -12,17 +12,29 @@ export default function Bookings({ user }: { user: User }) {
   const [paymentMethod, setPaymentMethod] = useState<"CARD" | "UPI" | "NETBANKING">("CARD");
   const [paying, setPaying] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  const isAdmin = user.role === "ADMIN";
 
   async function load() {
     try {
       const [userBookings, userPayments] = await Promise.all([
-        api.bookings(user.user_id),
-        api.payments(user.user_id),
+        isAdmin ? api.adminBookings(user.user_id) : api.bookings(user.user_id),
+        isAdmin ? api.adminPayments(user.user_id) : api.payments(user.user_id),
       ]);
       setBookings(userBookings);
       setPayments(userPayments);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Could not load bookings");
+    }
+  }
+
+  async function deleteBooking(booking: Booking) {
+    if (!window.confirm(`Delete booking #${booking.booking_id}? Any associated payment will also be removed.`)) return;
+    try {
+      await api.deleteBooking(user.user_id, booking.booking_id);
+      await load();
+      setMessage("Booking deleted.");
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Could not delete booking");
     }
   }
 
@@ -57,7 +69,7 @@ export default function Bookings({ user }: { user: User }) {
         <div>
           <div className="eyebrow">SHOWTIME / BOOKINGS</div>
           <h1>Bookings</h1>
-          <p>Your event reservations and payment status.</p>
+          <p>{isAdmin ? "All event reservations and payment status." : "Your event reservations and payment status."}</p>
         </div>
         <div className="metric">
           <b>{bookings.length}</b>
@@ -91,7 +103,9 @@ export default function Bookings({ user }: { user: User }) {
                 <span className="status open">{booking.status}</span>
               </span>
               <span>
-                {isPaid ? (
+                {isAdmin ? (
+                  <span className={isPaid ? "tag" : "muted"}>{isPaid ? "PAID" : "UNPAID"}</span>
+                ) : isPaid ? (
                   <span className="tag" style={{ borderColor: "#3d4c32", color: "#91a971" }}>
                     PAID
                   </span>
@@ -107,7 +121,11 @@ export default function Bookings({ user }: { user: User }) {
                   </button>
                 )}
               </span>
-              <ArrowUpRight size={15} />
+              {isAdmin ? (
+                <button className="icon-button delete-button" title="Delete booking" onClick={() => deleteBooking(booking)}>
+                  <Trash2 size={14} />
+                </button>
+              ) : <ArrowUpRight size={15} />}
             </div>
           );
         })}

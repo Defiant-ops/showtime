@@ -1,16 +1,28 @@
 import { useEffect, useState } from "react";
-import { CreditCard } from "lucide-react";
+import { CreditCard, Trash2 } from "lucide-react";
 import { api, type Payment, type User } from "../lib/api";
 
 export default function Payments({ user }: { user: User }) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [message, setMessage] = useState("");
+  const isAdmin = user.role === "ADMIN";
 
   async function load() {
     try {
-      setPayments(await api.payments(user.user_id));
+      setPayments(isAdmin ? await api.adminPayments(user.user_id) : await api.payments(user.user_id));
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Could not load payments");
+    }
+  }
+
+  async function deletePayment(payment: Payment) {
+    if (!window.confirm(`Delete payment ${payment.transaction_ref}?`)) return;
+    try {
+      await api.deletePayment(user.user_id, payment.payment_id);
+      await load();
+      setMessage("Payment deleted.");
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Could not delete payment");
     }
   }
 
@@ -24,7 +36,7 @@ export default function Payments({ user }: { user: User }) {
         <div>
           <div className="eyebrow">SHOWTIME / PAYMENTS</div>
           <h1>Payments</h1>
-          <p>Recorded payment receipts associated with your event bookings.</p>
+          <p>{isAdmin ? "Recorded payment receipts across all event bookings." : "Recorded payment receipts associated with your event bookings."}</p>
         </div>
         <div className="metric">
           <b>{payments.length}</b>
@@ -56,7 +68,11 @@ export default function Payments({ user }: { user: User }) {
             <span>
               <span className="status open">{payment.payment_status}</span>
             </span>
-            <span />
+            {isAdmin ? (
+              <button className="icon-button delete-button" title="Delete payment" onClick={() => deletePayment(payment)}>
+                <Trash2 size={14} />
+              </button>
+            ) : <span />}
           </div>
         ))}
 
