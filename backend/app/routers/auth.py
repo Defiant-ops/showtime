@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from ..database import get_db
+from ..database import commit_with_retry, get_db
 from ..models import User
 from ..schemas import LoginRequest, UserCreate, UserOut
 
@@ -21,7 +21,7 @@ def register(data: UserCreate, db: Session = Depends(get_db)):
         role="USER",
     )
     db.add(new_user)
-    db.commit()
+    commit_with_retry(db)
     db.refresh(new_user)
 
     return new_user

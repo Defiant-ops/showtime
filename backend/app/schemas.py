@@ -88,3 +88,7 @@ class TicketTypeOut(BaseModel):
     type_name: str
     lounge_access: str
     complimentary_food: str
+
+
+class ReadQuery(BaseModel):
+    query: str

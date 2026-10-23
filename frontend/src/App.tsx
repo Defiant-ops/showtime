@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, NavLink, Route, Routes, useNavigate } from "react-router-dom";
-import { CalendarDays, CreditCard, LogOut, Menu, Ticket, TicketCheck, X } from "lucide-react";
+import { CalendarDays, Code2, CreditCard, LogOut, Menu, Ticket, TicketCheck, X } from "lucide-react";
 import { api, type User } from "./lib/api";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
@@ -8,6 +8,7 @@ import Events from "./pages/Events";
 import Bookings from "./pages/Bookings";
 import Payments from "./pages/Payments";
 import Tickets from "./pages/Tickets";
+import Query from "./pages/Query";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(() => {
@@ -67,6 +68,9 @@ export default function App() {
           <NavLink to="/tickets" onClick={() => setMobileOpen(false)}>
             <TicketCheck size={15} /> Tickets
           </NavLink>
+          <NavLink to="/query" onClick={() => setMobileOpen(false)}>
+            <Code2 size={15} /> Query
+          </NavLink>
         </nav>
         <div className="user-area">
           <span className="user-name">{user.name}</span>
@@ -83,6 +87,7 @@ export default function App() {
           <Route path="/bookings" element={<Bookings user={user} />} />
           <Route path="/payments" element={<Payments user={user} />} />
           <Route path="/tickets" element={<Tickets user={user} />} />
+          <Route path="/query" element={<Query user={user} />} />
           <Route path="*" element={<Navigate to="/events" replace />} />
         </Routes>
       </main>

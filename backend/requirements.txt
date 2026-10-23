@@ -2,5 +2,8 @@ fastapi
 uvicorn[standard]
 sqlalchemy
 oracledb
+psycopg[binary]
 python-dotenv
 pydantic
+sqlglot
+pytest

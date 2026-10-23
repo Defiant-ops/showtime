@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from ..database import get_db
+from ..database import commit_with_retry, get_db
 from ..models import Booking, Payment
 from ..admin import require_admin
 
@@ -26,7 +26,7 @@ def delete_payment(
     if not payment:
         raise HTTPException(status_code=404, detail="Payment not found")
     db.delete(payment)
-    db.commit()
+    commit_with_retry(db)
 
 
 @router.get("/user/{user_id}")
@@ -62,6 +62,6 @@ def create_demo_payment(booking_id: int, db: Session = Depends(get_db)):
     )
 
     db.add(payment)
-    db.commit()
+    commit_with_retry(db)
     db.refresh(payment)
     return payment

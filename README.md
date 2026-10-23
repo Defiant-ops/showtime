@@ -143,7 +143,7 @@ docker ps
 With your virtual environment activated in `backend/`:
 
 ```bash
-uvicorn app.main:app --reload --port 8000
+c
 ```
 
 - API Base URL: `http://127.0.0.1:8000`

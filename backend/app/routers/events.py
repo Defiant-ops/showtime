@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from ..database import get_db
+from ..database import commit_with_retry, get_db
 from ..models import Booking, Event
 from ..admin import require_admin
 from ..schemas import EventCreate, EventOut
@@ -23,7 +23,7 @@ def create_event(
 ):
     event = Event(**data.model_dump(), status="OPEN")
     db.add(event)
-    db.commit()
+    commit_with_retry(db)
     db.refresh(event)
     return event
 
@@ -40,7 +40,7 @@ def delete_event(
     if db.query(Booking).filter(Booking.event_id == event_id).first():
         raise HTTPException(status_code=409, detail="Delete the event's bookings before deleting this event")
     db.delete(event)
-    db.commit()
+    commit_with_retry(db)
 
 
 @router.get("/{event_id}", response_model=EventOut)

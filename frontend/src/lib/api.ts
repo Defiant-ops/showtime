@@ -59,6 +59,12 @@ export type TicketType = {
   complimentary_food: string;
 };
 
+export type QueryResult = {
+  columns: string[];
+  rows: Array<Record<string, string | number | boolean | null>>;
+  truncated: boolean;
+};
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -151,4 +157,11 @@ export const api = {
     }),
 
   ticketTypes: () => request<TicketType[]>("/api/ticket-types"),
+
+  runQuery: (userId: number, query: string) =>
+    request<QueryResult>("/api/query", {
+      method: "POST",
+      headers: { "X-User-ID": String(userId) },
+      body: JSON.stringify({ query }),
+    }),
 };

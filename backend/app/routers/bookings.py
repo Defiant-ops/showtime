@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from ..database import get_db
+from ..database import commit_with_retry, get_db
 from ..models import Booking, Event, User
 from ..admin import require_admin
 from ..schemas import BookingCreate, BookingOut
@@ -52,7 +52,7 @@ def delete_booking(
     if booking.payment:
         db.delete(booking.payment)
     db.delete(booking)
-    db.commit()
+    commit_with_retry(db)
 
 
 @router.post("", response_model=BookingOut)
@@ -80,7 +80,7 @@ def create_booking(data: BookingCreate, db: Session = Depends(get_db)):
 
     booking = Booking(user_id=data.user_id, event_id=data.event_id)
     db.add(booking)
-    db.commit()
+    commit_with_retry(db)
     db.refresh(booking)
 
     return {

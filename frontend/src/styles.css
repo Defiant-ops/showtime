@@ -192,6 +192,59 @@ p {
 .ticket-event strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
 .ticket-event small { color: #77746e; font-size: 10px; }
 
+.head-status { display: flex; align-items: center; gap: 7px; }
+
+.query-workspace {
+  border: 1px solid #30302f;
+  background: #121212;
+}
+
+.query-toolbar {
+  min-height: 44px;
+  padding: 0 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #292928;
+}
+
+.query-actions { display: flex; align-items: center; gap: 14px; }
+.query-actions .icon-button:disabled { opacity: .45; cursor: wait; }
+
+.query-editor {
+  display: block;
+  width: 100%;
+  min-height: 210px;
+  padding: 18px;
+  resize: vertical;
+  border: 0;
+  outline: 0;
+  background: #0d0e0e;
+  color: #d8d3c9;
+  font: 13px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+  tab-size: 2;
+}
+
+.query-hint {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 18px;
+  padding: 9px 13px;
+  border-top: 1px solid #292928;
+  color: #716e68;
+  font-size: 10px;
+}
+
+.query-results { margin-top: 26px; }
+.query-placeholder, .query-limit { padding: 18px; color: #716e68; font-size: 11px; }
+.query-limit { border-top: 1px solid #292928; }
+.query-error { white-space: pre-wrap; }
+.query-result-table { overflow-x: auto; }
+.query-result-row { width: max-content; min-width: 100%; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+.query-result-table .table-header { width: max-content; min-width: 100%; }
+.query-cell { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .toolbar {
   display: flex;
   gap: 8px;
@@ -614,6 +667,7 @@ select {
   .table-row > :nth-child(2), .table-row > :nth-child(4), .table-row > :nth-child(5) { display: none; }
   .table-header > :nth-child(1)::after { content: " / DETAILS"; }
   .page-head { align-items: start; }
+  .query-result-row { grid-template-columns: repeat(3, minmax(130px, 1fr)); }
 }
 
 @media (max-width: 520px) {
@@ -628,4 +682,6 @@ select {
   .ticket-row > :nth-child(2), .ticket-row > :nth-child(3), .ticket-row > :nth-child(4), .ticket-row > :nth-child(5), .ticket-row > :nth-child(6) { display: none; }
   .ticket-type-row { grid-template-columns: 1fr 1fr; }
   .form-pair { grid-template-columns: 1fr; }
+  .query-hint { display: grid; }
+  .query-result-row { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
 }
