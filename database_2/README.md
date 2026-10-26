@@ -1,137 +1,124 @@
 # CockroachDB Setup for Showtime
 
-This project supports either the existing Oracle database or a CockroachDB PostgreSQL-compatible database. The selected backend is controlled by the `DB_TYPE` environment variable in the backend configuration.
+Showtime uses the same FastAPI backend and React frontend with Oracle or CockroachDB. Select the backend with `DB_TYPE`; only the selected database needs to be running. The backend does not silently fall back to another database.
 
-## Prerequisites
+For the complete application runbook, including Oracle, see the repository [README](../README.md).
 
-- Python 3.10+
-- A running CockroachDB cluster or a local single-node instance
-- TLS certificates for secure connections when required by your deployment
-- The Python dependency from `backend/requirements.txt` installed in the backend virtual environment
+## Local development with Docker on Linux
 
-For a local test deployment, you can start CockroachDB with the official binary:
+Prerequisites: Docker Engine, a working Docker service, Python 3.10+, and Node.js/npm. CockroachDB does not need to be installed on the host.
+
+Start a single-node, loopback-only local cluster. `--insecure` disables authentication and TLS, so this configuration is strictly for local development and must not be exposed to a network. Linux host networking is used so the loopback listener is reachable at `localhost:26257`. The admin UI uses port `18080` to avoid a common port conflict.
 
 ```bash
-# Example: local single-node database on 127.0.0.1:26257
-cockroach start-single-node \
+docker run -d \
+  --name showtime-cockroach-dev \
+  --network host \
+  -v showtime-cockroach-data:/cockroach/cockroach-data \
+  cockroachdb/cockroach:latest \
+  start-single-node \
   --insecure \
   --listen-addr=localhost:26257 \
-  --http-addr=localhost:8080
+  --http-addr=localhost:18080
 ```
 
-For secure deployments, prefer a certificate-backed configuration and set `sslmode=verify-full` or another supported PostgreSQL TLS mode.
-
-## Create or select a database
-
-Create a database and user in CockroachDB, or use an existing database:
-
-```sql
-CREATE DATABASE showtime;
-CREATE USER showtime_user WITH PASSWORD 'change_me';
-GRANT ALL ON DATABASE showtime TO showtime_user;
-```
-
-If using a different database name, update `COCKROACH_DATABASE_URL` accordingly.
-
-## Configure the connection URL
-
-Set the backend environment variables in `backend/.env`:
-
-```env
-DB_TYPE=cockroachdb
-COCKROACH_DATABASE_URL=postgresql+psycopg://showtime_user:change_me@localhost:26257/showtime?sslmode=verify-full
-```
-
-The connection string must be a PostgreSQL-compatible SQLAlchemy URL. For secure CockroachDB deployments, do not disable TLS verification in production. Use certificates and the proper SSL mode for your cluster.
-
-## Apply the schema
-
-From the repository root:
+The admin UI is at `http://localhost:18080`. Confirm the container is running with:
 
 ```bash
-cd backend
-source .venv/bin/activate
-cockroach sql --url 'postgresql://showtime_user:change_me@localhost:26257/showtime?sslmode=verify-full' < ../database_2/schema.sql
+docker ps --filter name=showtime-cockroach-dev
 ```
 
-If you are using the `psql` PostgreSQL-compatible client instead of `cockroach sql`, the SQL is compatible with CockroachDB and can be run with a PostgreSQL client that supports the database.
-
-## Load seed data
+To stop and later restart this database without losing its volume data:
 
 ```bash
-cd backend
-source .venv/bin/activate
-cockroach sql --url 'postgresql://showtime_user:change_me@localhost:26257/showtime?sslmode=verify-full' < ../database_2/seed.sql
+docker stop showtime-cockroach-dev
+docker start showtime-cockroach-dev
 ```
 
-The seed scripts assume a fresh CockroachDB database or a database without conflicting user email values. The SQL uses `ON CONFLICT` guards so repeated runs do not duplicate the same rows unnecessarily.
+If `26257` is already in use, stop the conflicting service or select another SQL port and use the same port in both the container's `--listen-addr` and the backend URL. If `18080` is occupied, change only `--http-addr`.
+
+## Initialize the schema and seed data
+
+From the repository root, create tables and load demo data:
+
+```bash
+docker exec -i showtime-cockroach-dev cockroach sql \
+  --insecure --host=localhost:26257 --database=defaultdb \
+  < database_2/schema.sql
+
+docker exec -i showtime-cockroach-dev cockroach sql \
+  --insecure --host=localhost:26257 --database=defaultdb \
+  < database_2/seed.sql
+```
+
+The schema creates the Showtime tables, foreign keys, checks, unique constraints, and indexes. The seed data is intended for a fresh database. It uses fixed IDs for related demo records; don't use this seed script to initialize a database that already contains application records.
+
+The demo accounts are:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Admin | `admin@example.com` | `password123` |
+| User | `raghav@example.com` | `password123` |
+
+These are development credentials only.
 
 ## Configure the backend
 
-The backend uses `DB_TYPE` to decide which connection to create at startup. Oracle remains the default so existing setups keep working without changes:
+Create `backend/.env` from the example if needed, then configure:
 
 ```env
-DB_TYPE=oracle
-# or
 DB_TYPE=cockroachdb
+COCKROACH_DATABASE_URL=postgresql+psycopg://root@localhost:26257/defaultdb?sslmode=disable
 ```
 
-After changing `DB_TYPE` or the connection string, restart the FastAPI backend process.
+The app maps the PostgreSQL-compatible URL to CockroachDB's SQLAlchemy dialect. The `sslmode=disable` setting is only valid for the local insecure development cluster described above.
 
-## Start the FastAPI backend
-
-From the backend directory:
+Install dependencies and check connectivity from the `backend/` directory:
 
 ```bash
-cd backend
+python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
+python test_db.py
+python -m pytest -q test_db.py
+```
+
+## Start the app
+
+From `backend/`, with the virtual environment active:
+
+```bash
 python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-The API remains on the same routes and payloads regardless of the selected database backend.
-
-## Start the frontend
-
-From the repository root:
+In another terminal, from `frontend/`:
 
 ```bash
-cd frontend
 npm install
 npm run dev
 ```
 
-The frontend continues to use the same API endpoint contract, and the backend selection is transparent to the browser.
+Open the local Vite URL printed by npm, normally `http://localhost:5173`. The frontend uses the existing API and does not need a CockroachDB-specific build or configuration.
 
-## Switch back to Oracle
+## Secure CockroachDB deployments
 
-Set the environment variables back to the Oracle settings and restart the FastAPI server:
+For CockroachDB Cloud or another secure cluster:
 
-```env
-DB_TYPE=oracle
-ORACLE_USER=system
-ORACLE_PASSWORD=password
-ORACLE_HOST=127.0.0.1
-ORACLE_PORT=1521
-ORACLE_SERVICE_NAME=xepdb1
-```
+1. Create/select a cluster and SQL database/user with the provider's supported process.
+2. Obtain the provider's connection string and CA certificate using its documented secure connection workflow.
+3. Set `DB_TYPE=cockroachdb` and set `COCKROACH_DATABASE_URL` to the SQLAlchemy-compatible URL. Preserve TLS verification, such as `sslmode=verify-full`, and include the provider's CA certificate path if required.
+4. Apply `schema.sql` and `seed.sql` using the provider's `cockroach sql --url ...` command or its documented PostgreSQL-compatible SQL client.
+5. Run `python test_db.py`, then start the API and frontend as above.
 
-## Validate connectivity
-
-```bash
-cd backend
-source .venv/bin/activate
-python test_db.py
-```
-
-This script checks the active `DB_TYPE`, validates the required environment variables, and verifies a simple `SELECT 1` query without printing secret values.
+Never use `--insecure` or `sslmode=disable` for a production or network-accessible database. Keep credentials and certificate files out of source control and logs. Do not paste credential-bearing URLs into issue reports.
 
 ## Troubleshooting
 
-- `Missing required environment variable 'COCKROACH_DATABASE_URL'`: update `backend/.env` or export the variable before starting the backend.
-- `Unsupported DB_TYPE value`: use `oracle` or `cockroachdb` exactly.
-- TLS handshake or certificate errors: ensure your CockroachDB client certificates and `sslmode` match the cluster configuration.
-- `Connection refused` or `timed out`: verify the cluster is running and the host, port, and database name are correct.
-- `READ ONLY`-related errors from the admin query endpoint: the backend only uses the transaction-read-only pattern for Oracle, which matches the existing implementation.
+- `Connection refused`: confirm the container/cluster is running, port and host match, and local firewall/network configuration permits access.
+- `Missing required environment variable 'COCKROACH_DATABASE_URL'`: set it in `backend/.env`; restart the backend after configuration changes.
+- `Unsupported DB_TYPE`: use `oracle` or `cockroachdb`.
+- TLS/certificate errors: use the CA certificate and SSL parameters supplied for your cluster; do not bypass verification in production.
+- SQL object already exists: the schema script is for a fresh database. Do not drop production tables to rerun it.
+- Seed conflicts: the seed file is for a fresh database and uses fixed IDs. Avoid rerunning it after modifying those records.
 
-The project intentionally does not silently fall back between databases. If the selected database is unavailable, the backend fails clearly instead of switching to a different engine.
+For a secure public deployment, also address the application's documented authentication and authorization limitations in the root README before exposing the API.

@@ -4,6 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 BASE_DIR = Path(__file__).resolve().parents[1]
@@ -51,9 +52,11 @@ def _build_cockroach_url(db_type: str) -> str:
             "Missing required environment variable 'COCKROACH_DATABASE_URL' for DB_TYPE=cockroachdb. "
             "Set a PostgreSQL-compatible SQLAlchemy URL configured for your CockroachDB deployment."
         )
-    if not url.startswith("postgresql+"):
+    if url.startswith("postgresql+"):
+        return str(make_url(url).set(drivername="cockroachdb"))
+    if not url.startswith("cockroachdb://"):
         raise RuntimeError(
-            "COCKROACH_DATABASE_URL must be a PostgreSQL-compatible SQLAlchemy URL."
+            "COCKROACH_DATABASE_URL must use postgresql+psycopg:// or cockroachdb://."
         )
     return url
 

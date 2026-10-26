@@ -3,6 +3,8 @@ uvicorn[standard]
 sqlalchemy
 oracledb
 psycopg[binary]
+psycopg2-binary
+sqlalchemy-cockroachdb
 python-dotenv
 pydantic
 sqlglot

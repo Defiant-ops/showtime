@@ -65,6 +65,27 @@ export type QueryResult = {
   truncated: boolean;
 };
 
+export type DatabaseTable = { name: string; available: boolean };
+export type DatabaseColumn = {
+  name: string;
+  type: string;
+  nullable: boolean;
+  primary_key: boolean;
+  sensitive: boolean;
+};
+export type DatabaseRow = {
+  primary_key: Record<string, string | number | boolean | null>;
+  values: Record<string, string | number | boolean | null>;
+};
+export type DatabaseRows = {
+  table: string;
+  columns: DatabaseColumn[];
+  rows: DatabaseRow[];
+  offset: number;
+  limit: number;
+  has_more: boolean;
+};
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -163,5 +184,27 @@ export const api = {
       method: "POST",
       headers: { "X-User-ID": String(userId) },
       body: JSON.stringify({ query }),
+    }),
+
+  databaseTables: (userId: number) =>
+    request<DatabaseTable[]>("/api/admin/database/tables", {
+      headers: { "X-User-ID": String(userId) },
+    }),
+
+  databaseRows: (userId: number, table: string, offset: number) =>
+    request<DatabaseRows>(`/api/admin/database/tables/${encodeURIComponent(table)}/rows?offset=${offset}`, {
+      headers: { "X-User-ID": String(userId) },
+    }),
+
+  updateDatabaseRow: (
+    userId: number,
+    table: string,
+    primaryKey: DatabaseRow["primary_key"],
+    values: Record<string, string | number | boolean | null>,
+  ) =>
+    request<{ updated: boolean }>(`/api/admin/database/tables/${encodeURIComponent(table)}/rows`, {
+      method: "PATCH",
+      headers: { "X-User-ID": String(userId) },
+      body: JSON.stringify({ primary_key: primaryKey, values }),
     }),
 };

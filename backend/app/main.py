@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from .database import DB_TYPE, DATABASE_URL, engine, validate_database_configuration
-from .routers import auth, bookings, events, payments, query, tickets
+from .routers import auth, bookings, database_admin, events, payments, query, tickets
 
 app = FastAPI(
     title="Showtime API",
@@ -34,6 +34,7 @@ app.include_router(bookings.router)
 app.include_router(payments.router)
 app.include_router(tickets.router)
 app.include_router(query.router)
+app.include_router(database_admin.router)
 
 
 @app.get("/")

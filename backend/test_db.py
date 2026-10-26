@@ -26,7 +26,7 @@ def test_validate_cockroach_configuration(monkeypatch):
         "postgresql+psycopg://user:password@localhost:26257/defaultdb?sslmode=verify-full",
     )
     url = validate_database_configuration("cockroachdb")
-    assert url.startswith("postgresql+")
+    assert url.startswith("cockroachdb://")
     assert "sslmode=verify-full" in url
 
 
@@ -45,7 +45,7 @@ def run_checks() -> None:
     if DB_TYPE == "oracle":
         assert "oracle+oracledb" in DATABASE_URL
     else:
-        assert "postgresql+psycopg" in DATABASE_URL
+        assert DATABASE_URL.startswith("cockroachdb://")
 
     with engine.connect() as connection:
         query = "SELECT 1 FROM dual" if DB_TYPE == "oracle" else "SELECT 1"

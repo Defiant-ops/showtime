@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, NavLink, Route, Routes, useNavigate } from "react-router-dom";
-import { CalendarDays, Code2, CreditCard, LogOut, Menu, Ticket, TicketCheck, X } from "lucide-react";
+import { CalendarDays, Code2, CreditCard, Database as DatabaseIcon, LogOut, Menu, Ticket, TicketCheck, X } from "lucide-react";
 import { api, type User } from "./lib/api";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
@@ -9,6 +9,7 @@ import Bookings from "./pages/Bookings";
 import Payments from "./pages/Payments";
 import Tickets from "./pages/Tickets";
 import Query from "./pages/Query";
+import Database from "./pages/Database";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(() => {
@@ -71,6 +72,11 @@ export default function App() {
           <NavLink to="/query" onClick={() => setMobileOpen(false)}>
             <Code2 size={15} /> Query
           </NavLink>
+          {user.role === "ADMIN" && (
+            <NavLink to="/database" onClick={() => setMobileOpen(false)}>
+              <DatabaseIcon size={15} /> Database
+            </NavLink>
+          )}
         </nav>
         <div className="user-area">
           <span className="user-name">{user.name}</span>
@@ -88,13 +94,14 @@ export default function App() {
           <Route path="/payments" element={<Payments user={user} />} />
           <Route path="/tickets" element={<Tickets user={user} />} />
           <Route path="/query" element={<Query user={user} />} />
+          <Route path="/database" element={user.role === "ADMIN" ? <Database user={user} /> : <Navigate to="/events" replace />} />
           <Route path="*" element={<Navigate to="/events" replace />} />
         </Routes>
       </main>
 
       <footer className="footer">
         <span>SHOWTIME / EVENT REGISTRY</span>
-        <span>FASTAPI · SQLALCHEMY · ORACLE DB</span>
+        <span>FASTAPI · SQLALCHEMY · ORACLE / COCKROACHDB</span>
       </footer>
     </div>
   );
